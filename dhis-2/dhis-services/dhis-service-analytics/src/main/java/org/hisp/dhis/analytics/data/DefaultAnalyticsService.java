@@ -108,6 +108,7 @@ import org.hisp.dhis.analytics.cache.AnalyticsCache;
 import org.hisp.dhis.analytics.event.EventAnalyticsService;
 import org.hisp.dhis.analytics.event.EventQueryParams;
 import org.hisp.dhis.analytics.resolver.ExpressionResolver;
+import org.hisp.dhis.analytics.table.PartitionUtils;
 import org.hisp.dhis.analytics.util.AnalyticsUtils;
 import org.hisp.dhis.calendar.Calendar;
 import org.hisp.dhis.common.AnalyticalObject;
@@ -1438,22 +1439,23 @@ public class DefaultAnalyticsService
                 DimensionalItemObject clone = dimensionalItemObject;
                 if ( dimensionalItemObject.getPeriodOffset() != 0 )
                 {
-                    List<Object> periodOffsetRow = getPeriodOffsetRow( grid, (String)row.get(1), dimensionalItemObject.getPeriodOffset());
-                    result.put( key,
-                            new DimensionItemWithValue( dimensionalItemObject, (Double) periodOffsetRow.get( grid.getWidth() - 1 ),
-                                    (String) periodOffsetRow.get( 1 ) ) );
+                    List<Object> periodOffsetRow = getPeriodOffsetRow( grid, dimensionalItemObject, (String)row.get(1), dimensionalItemObject.getPeriodOffset());
+                    if ( periodOffsetRow != null )
+                    {
+                        result.put( key,
+                            new DimensionItemWithValue( dimensionalItemObject,
+                                (Double) periodOffsetRow.get( grid.getWidth() - 1 ),
+                                (String) periodOffsetRow.get( 1 ) ) );
 
+                    } // TODO throw exception?
                     clone = SerializationUtils.clone( dimensionalItemObject );
                     clone.resetPeriodOffset();
                 }
 
-
                 result.put( key,
                     new DimensionItemWithValue( clone, (Double) row.get( grid.getWidth() - 1 ),
                         (String) row.get( 1 ) ) );
-
             }
-
         }
         
         return result;
@@ -1477,13 +1479,14 @@ public class DefaultAnalyticsService
         return p;
     }
     
-    private List<Object> getPeriodOffsetRow( Grid grid, String isoPeriod, int offset )
+    private List<Object> getPeriodOffsetRow( Grid grid, DimensionalItemObject dimItem, String isoPeriod, int offset )
     {
         Period shifted = shiftPeriod( PeriodType.getPeriodFromIsoString( isoPeriod ), offset );
         for ( List<Object> row : grid.getRows() )
         {
+            final String rowUid = (String) row.get(0);
             final String rowPeriod = (String) row.get( 1 );
-            if ( rowPeriod.equals( shifted.getIsoDate() ) )
+            if ( rowUid.equals(dimItem.getUid()) && rowPeriod.equals( shifted.getIsoDate() ) )
             {
                 return row;
             }

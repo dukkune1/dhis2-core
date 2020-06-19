@@ -256,7 +256,6 @@ public class PartitionUtils
         for ( DimensionalItemObject dimensionalItemObject : dimensionalItemObjects )
         {
             Period currentPeriod = (Period) dimensionalItemObject;
-            System.out.println(":: " + currentPeriod.getIsoDate());
             Period shifted = shiftPeriod( currentPeriod, periodOffset );
 
             if ( !map.containsValue( currentPeriod.getPeriodType().getName(), shifted ) )
