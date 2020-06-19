@@ -48,7 +48,9 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.lang3.StringUtils;
+import org.hisp.dhis.analytics.data.DimensionItemWithValue;
 import org.hisp.dhis.analytics.util.AnalyticsUtils;
 import org.hisp.dhis.category.Category;
 import org.hisp.dhis.category.CategoryOptionGroupSet;
@@ -1721,6 +1723,42 @@ public class DataQueryParams
             Number number = aggregatedDataMap.get( key );
 
             permutationMap.putEntry( permKey, dimItemObject, number != null ? number.doubleValue() : null );
+        }
+
+        return permutationMap;
+    }
+
+    public static Map<String, List<DimensionItemWithValue>> getPermutationDimensionalItemValueMap2( MultiValuedMap<String, DimensionItemWithValue> aggregatedDataMap )
+    {
+        Map<String, List<DimensionItemWithValue>> permutationMap = new HashMap<>();
+
+        for ( String key : aggregatedDataMap.keySet() )
+        {
+            // Remove DimensionalItemObject uid from key
+            List<String> keys = Lists.newArrayList( key.split( DIMENSION_SEP ) );
+            keys.remove( DX_INDEX );
+
+            final Collection<DimensionItemWithValue> dimensionItemWithValues = aggregatedDataMap.get( key );
+
+            // Generate final permutation key
+            final String permKey = StringUtils.join( keys, DIMENSION_SEP );
+
+            for ( DimensionItemWithValue dimWithValue : dimensionItemWithValues )
+            {
+                Number number = dimWithValue.getValue();
+                
+                if ( !permutationMap.containsKey( permKey ) )
+                {
+//                    permutationMap.put( permKey, dimWithValue.getDimensionalItemObject(),
+//                        number != null ? number.doubleValue() : null );
+                    permutationMap.put( permKey, Lists.newArrayList(dimWithValue));
+                }
+                else
+                {
+                    permutationMap.get(permKey).add(dimWithValue);
+                    //permutationMap.get(permKey).put( dimWithValue.getDimensionalItemObject(), number != null ? number.doubleValue() : null );
+                }
+            }
         }
 
         return permutationMap;
