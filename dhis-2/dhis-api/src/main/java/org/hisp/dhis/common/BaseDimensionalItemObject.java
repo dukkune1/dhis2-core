@@ -175,9 +175,33 @@ public class BaseDimensionalItemObject
     {
         return periodOffset;
     }
-    
-    public void setPeriodOffset( int periodOffset )
+
+    @Override
+    public void resetPeriodOffset()
+    {
+        this.periodOffset = 0;
+    }
+
+    public void setPeriodOffset(int periodOffset )
     {
         this.periodOffset = periodOffset;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        final BaseDimensionalItemObject that = (BaseDimensionalItemObject) o;
+
+        return periodOffset == that.periodOffset;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + periodOffset;
+        return result;
     }
 }

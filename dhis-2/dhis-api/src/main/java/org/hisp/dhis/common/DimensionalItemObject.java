@@ -93,4 +93,6 @@ public interface DimensionalItemObject
     TotalAggregationType getTotalAggregationType();
 
     int getPeriodOffset();
+
+    void resetPeriodOffset();
 }

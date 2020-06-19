@@ -40,11 +40,5 @@ public class DimensionItemWithValue
 
     private final Double value;
 
-    private String period;
-
-    public int getPeriodOffset()
-    {
-        return this.dimensionalItemObject.getPeriodOffset();
-    }
-
+    private final String period;
 }

@@ -84,6 +84,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.Var;
 import org.hisp.dhis.analytics.AnalyticsAggregationType;
@@ -110,6 +111,7 @@ import org.hisp.dhis.analytics.resolver.ExpressionResolver;
 import org.hisp.dhis.analytics.util.AnalyticsUtils;
 import org.hisp.dhis.calendar.Calendar;
 import org.hisp.dhis.common.AnalyticalObject;
+import org.hisp.dhis.common.BaseDimensionalItemObject;
 import org.hisp.dhis.common.BaseDimensionalObject;
 import org.hisp.dhis.common.CombinationGenerator;
 import org.hisp.dhis.common.DataDimensionItemType;
@@ -522,7 +524,8 @@ public class DefaultAnalyticsService
 
                     Map<String, Integer> orgUnitCountMap = permutationOrgUnitTargetMap != null ? permutationOrgUnitTargetMap.get( ou ) : null;
 
-                    IndicatorValue value = expressionService.getIndicatorValueObject( indicator, periods, asMap(valueMap), constantMap, orgUnitCountMap );
+                    IndicatorValue value = expressionService.getIndicatorValueObject( indicator, periods,
+                        asMap( valueMap ), constantMap, orgUnitCountMap );
 
                     if ( value != null && satisfiesMeasureCriteria( params, value, indicator ) )
                     {
@@ -553,9 +556,9 @@ public class DefaultAnalyticsService
         Map<DimensionalItemObject, Double> valueMap = new HashMap<>();
         for ( DimensionItemWithValue dimensionItemWithValue : dimensionItemWithValues )
         {
-            final DimensionalItemObject dimItem = dimensionItemWithValue.getDimensionalItemObject();
+            final BaseDimensionalItemObject dimItem = (BaseDimensionalItemObject) dimensionItemWithValue.getDimensionalItemObject();
 
-            valueMap.put( dimensionItemWithValue.getDimensionalItemObject(), dimensionItemWithValue.getValue() );
+            valueMap.put( dimItem, dimensionItemWithValue.getValue() );
         }
         return valueMap;
     }
@@ -1432,17 +1435,21 @@ public class DefaultAnalyticsService
                     DimensionalObject.DIMENSION_SEP );
 
                 final DimensionalItemObject dimensionalItemObject = getByUid( (String) row.get( 0 ), items ).get( 0 );
-
+                DimensionalItemObject clone = dimensionalItemObject;
                 if ( dimensionalItemObject.getPeriodOffset() != 0 )
                 {
                     List<Object> periodOffsetRow = getPeriodOffsetRow( grid, (String)row.get(1), dimensionalItemObject.getPeriodOffset());
                     result.put( key,
                             new DimensionItemWithValue( dimensionalItemObject, (Double) periodOffsetRow.get( grid.getWidth() - 1 ),
                                     (String) periodOffsetRow.get( 1 ) ) );
+
+                    clone = SerializationUtils.clone( dimensionalItemObject );
+                    clone.resetPeriodOffset();
                 }
-                
+
+
                 result.put( key,
-                    new DimensionItemWithValue( dimensionalItemObject, (Double) row.get( grid.getWidth() - 1 ),
+                    new DimensionItemWithValue( clone, (Double) row.get( grid.getWidth() - 1 ),
                         (String) row.get( 1 ) ) );
 
             }
