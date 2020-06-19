@@ -172,7 +172,8 @@ public class DimensionalItemId
         return Objects.equals( this.dimensionItemType, that.dimensionItemType )
             && Objects.equals( this.id0, that.id0 )
             && Objects.equals( this.id1, that.id1 )
-            && Objects.equals( this.id2, that.id2 );
+            && Objects.equals( this.id2, that.id2 )
+            && this.periodOffset.equals( that.periodOffset );
     }
 
     @Override
@@ -183,6 +184,7 @@ public class DimensionalItemId
         result = 31 * result + (id0 == null ? 0 : id0.hashCode());
         result = 31 * result + (id1 == null ? 0 : id1.hashCode());
         result = 31 * result + (id2 == null ? 0 : id2.hashCode());
+        result = 31 * result + periodOffset;
 
         return result;
     }
