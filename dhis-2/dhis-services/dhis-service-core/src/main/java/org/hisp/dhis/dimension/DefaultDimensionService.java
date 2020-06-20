@@ -38,8 +38,11 @@ import static org.hisp.dhis.expression.ExpressionService.SYMBOL_WILDCARD;
 import static org.hisp.dhis.organisationunit.OrganisationUnit.*;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Joiner;
+import org.apache.commons.validator.Var;
 import org.hisp.dhis.category.*;
 import org.hisp.dhis.common.*;
 import org.hisp.dhis.commons.collection.UniqueArrayList;
@@ -371,14 +374,17 @@ public class DefaultDimensionService
         final Map<DimensionalItemId, DimensionalItemObject> map = getDataDimensionalItemObjectMap( itemIds );
 
         Map<String, DimensionalItemObject> dios = new HashMap<>();
+        
+        Function<String[], String> makeKey = strings -> Joiner.on( "-" ).useForNull("null").join( strings );
 
         for ( DimensionalItemId key : map.keySet() )
         {
+            final String[] keyIds = {key.getId0(), key.getId1(), key.getId2()};
             final DimensionalItemObject item = map.get( key );
 
-            if ( dios.containsKey( item.getUid() ) )
+            if ( dios.containsKey( makeKey.apply( keyIds ) ) )
             {
-                if ( dios.get( item.getUid() ).getPeriodOffset() == 0
+                if ( dios.get( makeKey.apply( keyIds ) ).getPeriodOffset() == 0
                     && item.getPeriodOffset() != 0 )
                 {
                     dios.replace( item.getUid(), item );
@@ -386,7 +392,7 @@ public class DefaultDimensionService
             }
             else
             {
-                dios.put( item.getUid(), item );
+                dios.put( makeKey.apply( keyIds ), item );
             }
         }
 

@@ -39,6 +39,4 @@ public class DimensionItemWithValue
     private final DimensionalItemObject dimensionalItemObject;
 
     private final Double value;
-
-    private final String period;
 }

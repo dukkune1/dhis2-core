@@ -1332,11 +1332,8 @@ public class DefaultAnalyticsService
     {
         List<Indicator> indicators = asTypedList( params.getIndicators() );
 
-        //Map<String, Double> valueMap = getAggregatedDataValueMap( params, indicators);
-//        getAggregatedDataValueMap2( params, indicators );
-       
         return DataQueryParams
-            .getPermutationDimensionalItemValueMap( getAggregatedDataValueMap2( params, indicators ) );
+            .getPermutationDimensionalItemValueMap( getAggregatedDataValueMap( params, indicators ) );
     }
 
     /**
@@ -1350,36 +1347,7 @@ public class DefaultAnalyticsService
      * @param indicators the list of indicators.
      * @return a dimensional items to aggregate values map.
      */
-    private Map<String, Double> getAggregatedDataValueMap( DataQueryParams params, List<Indicator> indicators )
-    {
-        List<DimensionalItemObject> items = Lists
-                .newArrayList( expressionService.getIndicatorDimensionalItemObjects( resolveIndicatorExpressions( indicators ) ) );
-
-        if ( items.isEmpty() )
-        {
-            return Maps.newHashMap();
-        }
-
-        items = DimensionalObjectUtils.replaceOperandTotalsWithDataElements( items );
-
-        DimensionalObject dimension = new BaseDimensionalObject( DimensionalObject.DATA_X_DIM_ID, DimensionType.DATA_X, null, DISPLAY_NAME_DATA_X, items );
-
-        DataQueryParams dataSourceParams = DataQueryParams
-            .newBuilder( params )
-            .replaceDimension( dimension )
-            .withMeasureCriteria( new HashMap<>() )
-            .withIncludeNumDen( false )
-            .withSkipHeaders( true )
-            .withOutputFormat( OutputFormat.ANALYTICS )
-            .withSkipMeta( true ).build();
-
-        // each row contains: dimension uid | period | value
-        Grid grid = getAggregatedDataValueGridInternal( dataSourceParams );
-
-        return grid.getAsMap( grid.getWidth() - 1, DimensionalObject.DIMENSION_SEP );
-    }
-
-    private MultiValuedMap<String, DimensionItemWithValue> getAggregatedDataValueMap2( DataQueryParams params,
+    private MultiValuedMap<String, DimensionItemWithValue> getAggregatedDataValueMap( DataQueryParams params,
         List<Indicator> indicators )
     {
         List<DimensionalItemObject> items = Lists
@@ -1428,8 +1396,7 @@ public class DefaultAnalyticsService
                     {
                         result.put( key,
                             new DimensionItemWithValue( dimensionalItemObject,
-                                (Double) periodOffsetRow.get( grid.getWidth() - 1 ),
-                                (String) periodOffsetRow.get( 1 ) ) );
+                                (Double) periodOffsetRow.get( grid.getWidth() - 1 ) ) );
 
                     } // TODO throw exception?
                     clone = SerializationUtils.clone( dimensionalItemObject );
@@ -1437,8 +1404,7 @@ public class DefaultAnalyticsService
                 }
 
                 result.put( key,
-                    new DimensionItemWithValue( clone, (Double) row.get( grid.getWidth() - 1 ),
-                        (String) row.get( 1 ) ) );
+                    new DimensionItemWithValue( clone, (Double) row.get( grid.getWidth() - 1 ) ) );
             }
         }
         
