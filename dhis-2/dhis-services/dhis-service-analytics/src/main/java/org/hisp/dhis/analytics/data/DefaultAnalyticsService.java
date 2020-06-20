@@ -1396,7 +1396,8 @@ public class DefaultAnalyticsService
         return grid.getAsMap( grid.getWidth() - 1, DimensionalObject.DIMENSION_SEP );
     }
 
-    private MultiValuedMap<String, DimensionItemWithValue> getAggregatedDataValueMap2(DataQueryParams params, List<Indicator> indicators )
+    private MultiValuedMap<String, DimensionItemWithValue> getAggregatedDataValueMap2( DataQueryParams params,
+        List<Indicator> indicators )
     {
         List<DimensionalItemObject> items = Lists
                 .newArrayList( expressionService.getIndicatorDimensionalItemObjects( resolveIndicatorExpressions( indicators ) ) );
