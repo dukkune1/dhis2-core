@@ -1363,13 +1363,13 @@ public class DefaultAnalyticsService
         DimensionalObject dimension = new BaseDimensionalObject( DimensionalObject.DATA_X_DIM_ID, DimensionType.DATA_X, null, DISPLAY_NAME_DATA_X, items );
 
         DataQueryParams dataSourceParams = DataQueryParams
-                .newBuilder( params )
-                .replaceDimension( dimension )
-                .withMeasureCriteria( new HashMap<>() )
-                .withIncludeNumDen( false )
-                .withSkipHeaders( true )
-                .withOutputFormat( OutputFormat.ANALYTICS )
-                .withSkipMeta( true ).build();
+            .newBuilder( params )
+            .replaceDimension( dimension )
+            .withMeasureCriteria( new HashMap<>() )
+            .withIncludeNumDen( false )
+            .withSkipHeaders( true )
+            .withOutputFormat( OutputFormat.ANALYTICS )
+            .withSkipMeta( true ).build();
 
         // each row contains: dimension uid | period | value
         Grid grid = getAggregatedDataValueGridInternal( dataSourceParams );
@@ -1411,7 +1411,7 @@ public class DefaultAnalyticsService
         return result;
     }
     
-    // TODO duplicated code from PartitionUtils
+    // FIXME luciano duplicated code from PartitionUtils
     private static Period shiftPeriod( Period period, int periodOffset )
     {
         PeriodType periodType = period.getPeriodType();
