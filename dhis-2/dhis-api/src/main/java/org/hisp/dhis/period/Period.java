@@ -76,8 +76,8 @@ public class Period
     private transient String isoPeriod;
 
     /**
-     * Transient boolean. If true, this Period has been created as a consequence of a Dimensional Item Object
-     * having an offset period value higher/lower than 0
+     * Transient boolean. If true, this Period has been created as a consequence of
+     * a Dimensional Item Object having an Offset Period value higher/lower than 0
      */
     private transient boolean shifted = false;
 

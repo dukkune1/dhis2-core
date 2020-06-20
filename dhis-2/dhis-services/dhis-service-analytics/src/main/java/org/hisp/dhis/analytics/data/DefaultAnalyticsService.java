@@ -86,7 +86,6 @@ import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.validator.Var;
 import org.hisp.dhis.analytics.AnalyticsAggregationType;
 import org.hisp.dhis.analytics.AnalyticsManager;
 import org.hisp.dhis.analytics.AnalyticsMetaDataKey;
@@ -108,7 +107,6 @@ import org.hisp.dhis.analytics.cache.AnalyticsCache;
 import org.hisp.dhis.analytics.event.EventAnalyticsService;
 import org.hisp.dhis.analytics.event.EventQueryParams;
 import org.hisp.dhis.analytics.resolver.ExpressionResolver;
-import org.hisp.dhis.analytics.table.PartitionUtils;
 import org.hisp.dhis.analytics.util.AnalyticsUtils;
 import org.hisp.dhis.calendar.Calendar;
 import org.hisp.dhis.common.AnalyticalObject;
@@ -253,11 +251,11 @@ public class DefaultAnalyticsService
 
         queryValidator.validate( params );
 
-//        if ( analyticsCache.isEnabled() )
-//        {
-//            final DataQueryParams immutableParams = DataQueryParams.newBuilder( params ).build();
-//            return analyticsCache.getOrFetch( params, p -> getAggregatedDataValueGridInternal( immutableParams ) );
-//        }
+        if ( analyticsCache.isEnabled() )
+        {
+            final DataQueryParams immutableParams = DataQueryParams.newBuilder( params ).build();
+            return analyticsCache.getOrFetch( params, p -> getAggregatedDataValueGridInternal( immutableParams ) );
+        }
 
         return getAggregatedDataValueGridInternal( params );
     }
@@ -501,7 +499,6 @@ public class DefaultAnalyticsService
 
             List<List<DimensionItem>> dimensionItemPermutations = dataSourceParams.getDimensionItemPermutations();
 
-//            Map<String, Map<DimensionalItemObject, Double>> permutationDimensionItemValueMap = getPermutationDimensionItemValueMap( dataSourceParams );
             Map<String, List<DimensionItemWithValue>> permutationDimensionItemValueMap = getPermutationDimensionItemValueMap( dataSourceParams );
 
             handleEmptyDimensionItemPermutations( dimensionItemPermutations );
@@ -511,8 +508,6 @@ public class DefaultAnalyticsService
                 for ( List<DimensionItem> dimensionItems : dimensionItemPermutations )
                 {
                     String permKey = DimensionItem.asItemKey( dimensionItems );
-
-                    //Map<DimensionalItemObject, Double> valueMap = permutationDimensionItemValueMap.getOrDefault( permKey, new HashMap<>() );
 
                     final List<DimensionItemWithValue> valueMap = permutationDimensionItemValueMap.getOrDefault(permKey, new ArrayList<>());
 
@@ -526,7 +521,7 @@ public class DefaultAnalyticsService
                     Map<String, Integer> orgUnitCountMap = permutationOrgUnitTargetMap != null ? permutationOrgUnitTargetMap.get( ou ) : null;
 
                     IndicatorValue value = expressionService.getIndicatorValueObject( indicator, periods,
-                        asMap( valueMap ), constantMap, orgUnitCountMap );
+                        convertToDimItemValueMap( valueMap ), constantMap, orgUnitCountMap );
 
                     if ( value != null && satisfiesMeasureCriteria( params, value, indicator ) )
                     {
@@ -550,18 +545,6 @@ public class DefaultAnalyticsService
                 }
             }
         }
-    }
-    
-    private Map<DimensionalItemObject, Double> asMap( List<DimensionItemWithValue> dimensionItemWithValues )
-    {
-        Map<DimensionalItemObject, Double> valueMap = new HashMap<>();
-        for ( DimensionItemWithValue dimensionItemWithValue : dimensionItemWithValues )
-        {
-            final BaseDimensionalItemObject dimItem = (BaseDimensionalItemObject) dimensionItemWithValue.getDimensionalItemObject();
-
-            valueMap.put( dimItem, dimensionItemWithValue.getValue() );
-        }
-        return valueMap;
     }
 
     /**
@@ -1353,7 +1336,7 @@ public class DefaultAnalyticsService
 //        getAggregatedDataValueMap2( params, indicators );
        
         return DataQueryParams
-            .getPermutationDimensionalItemValueMap2( getAggregatedDataValueMap2( params, indicators ) );
+            .getPermutationDimensionalItemValueMap( getAggregatedDataValueMap2( params, indicators ) );
     }
 
     /**
@@ -1436,7 +1419,7 @@ public class DefaultAnalyticsService
                     ArrayUtils.remove( row.toArray( new Object[0] ), grid.getWidth() - 1 ),
                     DimensionalObject.DIMENSION_SEP );
 
-                final DimensionalItemObject dimensionalItemObject = getByUid( (String) row.get( 0 ), items ).get( 0 );
+                final DimensionalItemObject dimensionalItemObject = findDimensionalItem( (String) row.get( 0 ), items ).get( 0 );
                 DimensionalItemObject clone = dimensionalItemObject;
                 if ( dimensionalItemObject.getPeriodOffset() != 0 )
                 {
@@ -1509,8 +1492,16 @@ public class DefaultAnalyticsService
         return false;
 
     }
-    
-    private List<DimensionalItemObject> getByUid( String uid, List<DimensionalItemObject> items )
+
+    /**
+     * Filters by uid and returns one ore more {@see DimensionalItemObject} from a
+     * List
+     * 
+     * @param uid a uid to filter {@see DimensionalItemObject} on
+     * @param items the filtered List
+     * @return a List only containing the  {@see DimensionalItemObject} matching the uid
+     */
+    private List<DimensionalItemObject> findDimensionalItem( String uid, List<DimensionalItemObject> items )
     {
         return items.stream().filter( dio -> dio.getUid().equals( uid ) ).collect( Collectors.toList() );
     }
@@ -1545,6 +1536,26 @@ public class DefaultAnalyticsService
         {
             dimensionItemPermutations.add( new ArrayList<>() );
         }
+    }
+
+    /**
+     * Transforms a List of {@see DimensionItemWithValue} into a Map where:
+     * 
+     * key -> DimensionalItemObject value -> the value of the DimensionalItemObject
+     * 
+     */
+    private Map<DimensionalItemObject, Double> convertToDimItemValueMap(
+        List<DimensionItemWithValue> dimensionItemWithValues )
+    {
+        Map<DimensionalItemObject, Double> valueMap = new HashMap<>();
+        for ( DimensionItemWithValue dimensionItemWithValue : dimensionItemWithValues )
+        {
+            final BaseDimensionalItemObject dimItem = (BaseDimensionalItemObject) dimensionItemWithValue
+                .getDimensionalItemObject();
+
+            valueMap.put( dimItem, dimensionItemWithValue.getValue() );
+        }
+        return valueMap;
     }
 
     /**
